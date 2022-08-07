@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let prom_catalog = PromCatalogProvider::new(args.url.as_str()).await;
     ctx.register_catalog("prometheus", Arc::new(prom_catalog));
 
-    ctx.sql("select * from information_schema.tables")
+    ctx.sql("select * from information_schema.tables order by table_catalog, table_schema, table_name ")
         .await?
         .show()
         .await?;
