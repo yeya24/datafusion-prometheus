@@ -4,7 +4,24 @@
 
 Run SQL against Prometheus source.
 
+## Usage
+
+```bash
+datafusion-prometheus 0.1.0
+
+USAGE:
+    datafusion-prometheus [OPTIONS]
+
+OPTIONS:
+    -h, --help             Print help information
+    -q, --query <QUERY>    Initial query to load metrics from Prometheus [default: {__name__=~".+"}]
+    -u, --url <URL>        Prometheus URL [default: http://localhost:9090]
+    -V, --version          Print version information
+```
+
 ## Example
+
+By default, `datafusion-prometheus` loads all the metrics into memory using an instant query.
 
 ```
  ./datafusion-prometheus
@@ -250,5 +267,25 @@ Run SQL against Prometheus source.
 +-----------------+
 | 15              |
 +-----------------+
+```
 
+If you only want to query some specific metrics, considering specifying the query to load metrics.
+
+```
+datafusion-prometheus -q '{__name__="up"}'
++---------------+--------------------+------------+------------+------------+
+| table_catalog | table_schema       | table_name | table_type | definition |
++---------------+--------------------+------------+------------+------------+
+| datafusion    | information_schema | columns    | VIEW       |            |
+| datafusion    | information_schema | tables     | VIEW       |            |
+| prometheus    | information_schema | columns    | VIEW       |            |
+| prometheus    | information_schema | tables     | VIEW       |            |
+| prometheus    | prometheus         | up         | BASE TABLE |            |
++---------------+--------------------+------------+------------+------------+
+> select * from prometheus.prometheus.up;
++----------+----------------+------------+----------------+-------+
+| __name__ | instance       | job        | timestamp      | value |
++----------+----------------+------------+----------------+-------+
+| up       | localhost:9090 | prometheus | 1659845417.784 | 1     |
++----------+----------------+------------+----------------+-------+
 ```

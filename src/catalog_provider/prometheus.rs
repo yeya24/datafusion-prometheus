@@ -17,6 +17,7 @@ use futures::executor::block_on;
 use prometheus_http_query::{Client, InstantQueryBuilder};
 use futures::prelude::*;
 
+const METRIC_NAME: &str = "__name__";
 
 /// `CatalogProvider` implementation for Prometheus.
 pub struct PromCatalogProvider {
@@ -27,20 +28,20 @@ pub struct PromCatalogProvider {
 
 impl PromCatalogProvider {
     pub async fn default() -> Self {
-        PromCatalogProvider::new("http://localhost:9090").await
+        PromCatalogProvider::new("http://localhost:9090", r#"{__name__=~".+"}"#).await
     }
 
-    pub async fn new(url: &str) -> Self {
+    pub async fn new(url: &str, metrics_query: &str) -> Self {
         let client = Client::from_str(url).unwrap();
         let schema = vec!["prometheus".to_string()];
         let schema_provider = MemorySchemaProvider::new();
-        let q = "{__name__=~\".+\"}";
-        let response = client.query(q).get().await.unwrap();
+        let response = client.query(metrics_query).get().await.unwrap();
         let mut metric_fields: HashMap<String,SchemaRef> = HashMap::new();
         let mut metric_batches: HashMap<String, Vec<RecordBatch>> = HashMap::new();
         for result in response.data().as_vector().unwrap() {
             let map = result.metric();
-            let name = map.get("__name__").unwrap();
+            // TODO: handle __name__ doesn't exist case.
+            let name = map.get(METRIC_NAME).unwrap();
             let mut contains_metric = false;
             if metric_fields.contains_key(name) {
                 contains_metric = true;

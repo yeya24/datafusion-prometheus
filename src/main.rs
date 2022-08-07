@@ -15,6 +15,9 @@ struct Args {
     /// Prometheus URL
     #[clap(short, long, default_value_t = String::from("http://localhost:9090"), group = "addr")]
     url: String,
+    /// Initial query to load metrics from Prometheus.
+    #[clap(short, long, default_value_t = String::from(r#"{__name__=~".+"}"#), group = "metrics_query")]
+    query: String,
 }
 
 #[tokio::main]
@@ -23,7 +26,7 @@ async fn main() -> Result<()> {
     let config = SessionConfig::new().with_information_schema(true);
     let ctx = SessionContext::with_config(config);
 
-    let prom_catalog = PromCatalogProvider::new(args.url.as_str()).await;
+    let prom_catalog = PromCatalogProvider::new(args.url.as_str(), args.query.as_str()).await;
     ctx.register_catalog("prometheus", Arc::new(prom_catalog));
 
     ctx.sql("select * from information_schema.tables order by table_catalog, table_schema, table_name ")
