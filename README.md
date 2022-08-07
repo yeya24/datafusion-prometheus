@@ -269,6 +269,7 @@ By default, `datafusion-prometheus` loads all the metrics into memory using an i
 +-----------------+
 ```
 
+By default, `datafusion-prometheus` tries to load all metrics using an instant query.
 If you only want to query some specific metrics, considering specifying the query to load metrics.
 
 ```
